@@ -1,70 +1,60 @@
 <?php
-// dashboard.php
-session_start();
 require_once 'config.php';
+include_once 'includes/header.php';
 
-// Check if user is logged in
+// Make sure user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
-
-// Fetch all modules
-$stmt = $pdo->query("SELECT * FROM modules");
-$modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Fetch modules activated by user
-$stmt = $pdo->prepare("SELECT module_id FROM user_modules WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$user_modules_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard - Multi SaaS</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
 <div class="container">
-    <h2>Welcome, <?php echo htmlspecialchars($user_name); ?>!</h2>
-    <a href="logout.php">Logout</a>
-    
-    <h3>Your Modules</h3>
-    <div class="modules-container">
-        <?php foreach ($modules as $module): ?>
-            <div class="module-card">
-                <h4><?php echo ucfirst($module['name']); ?></h4>
-                
-                <?php if (in_array($module['id'], $user_modules_ids)): ?>
-                    <a href="modules/<?php echo $module['name']; ?>.php">Open</a>
-                <?php else: ?>
-                    <form method="POST" action="">
-                        <input type="hidden" name="module_id" value="<?php echo $module['id']; ?>">
-                        <button type="submit" name="activate_module">Activate</button>
-                    </form>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
+    <h2>Welcome to Your Dashboard, <?php echo htmlspecialchars($user_name); ?>!</h2>
+    <p>Select a module to manage:</p>
+
+    <div class="module-cards">
+        <div class="card">
+            <h3>Lotto</h3>
+            <p>Generate lotto numbers and track your entries.</p>
+            <a href="modules/lotto.php">Open Lotto Module</a>
+        </div>
+
+        <div class="card">
+            <h3>Shipping</h3>
+            <p>Generate tracking numbers and manage shipments.</p>
+            <a href="modules/shipping.php">Open Shipping Module</a>
+        </div>
+
+        <div class="card">
+            <h3>Celebrity</h3>
+            <p>Create celebrity posts and track your content.</p>
+            <a href="modules/celebrity.php">Open Celebrity Module</a>
+        </div>
+
+        <div class="card">
+            <h3>Bank</h3>
+            <p>Deposit or withdraw funds and view transactions.</p>
+            <a href="modules/bank.php">Open Bank Module</a>
+        </div>
+
+        <div class="card">
+            <h3>Investments</h3>
+            <p>Track your investments and their status.</p>
+            <a href="modules/investments.php">Open Investments Module</a>
+        </div>
     </div>
-
-    <?php
-    // Handle module activation
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['activate_module'])) {
-        $module_id = intval($_POST['module_id']);
-
-        $stmt = $pdo->prepare("INSERT INTO user_modules (user_id, module_id) VALUES (?, ?)");
-        $stmt->execute([$user_id, $module_id]);
-
-        // Refresh to update dashboard
-        header("Location: dashboard.php");
-        exit;
-    }
-    ?>
 </div>
-</body>
-</html>
+
+<style>
+.container { max-width: 900px; margin: 20px auto; font-family: Arial, sans-serif; }
+.module-cards { display: flex; flex-wrap: wrap; gap: 20px; }
+.card { flex: 1 1 250px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; text-align: center; background: #fafafa; }
+.card h3 { margin-top: 0; }
+.card a { display: inline-block; margin-top: 10px; padding: 6px 12px; background: #007bff; color: #fff; border-radius: 4px; text-decoration: none; }
+.card a:hover { background: #0056b3; }
+</style>
+
+<?php include_once 'includes/footer.php'; ?>
