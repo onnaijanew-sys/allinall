@@ -1,59 +1,40 @@
 <?php
-session_start();
 require_once '../config.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
+include_once '../includes/header.php';
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
-
 $message = "";
 
-// Handle bank transactions
+// Bank transaction
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bank_transaction'])) {
     $type = $_POST['type'];
     $amount = floatval($_POST['amount']);
-
-    if ($amount <= 0) {
-        $message = "Enter a valid amount.";
-    } else {
+    if ($amount > 0) {
         $stmt = $pdo->prepare("INSERT INTO bank_entries (user_id, type, amount) VALUES (?, ?, ?)");
         if ($stmt->execute([$user_id, $type, $amount])) {
             $message = "Transaction successful!";
             $showModalAd = true;
         } else {
-            $message = "Transaction failed.";
+            $message = "Transaction failed!";
         }
+    } else {
+        $message = "Enter a valid amount.";
     }
 }
 
-// Fetch user's bank entries
+// Fetch user bank entries
 $stmt = $pdo->prepare("SELECT * FROM bank_entries WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);
 $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Bank Module</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="../assets/js/main.js"></script>
-</head>
-<body>
 <div class="container">
     <h2>Bank Dashboard</h2>
-    <a href="../dashboard.php">Back to Dashboard</a> | <a href="../logout.php">Logout</a>
 
-    <?php if($message): ?>
-        <p style="color: green;"><?php echo $message; ?></p>
-    <?php endif; ?>
+    <?php if($message): ?><p style="color:green;"><?php echo $message; ?></p><?php endif; ?>
 
-    <form method="POST" action="">
+    <form method="POST">
         <select name="type">
             <option value="deposit">Deposit</option>
             <option value="withdraw">Withdraw</option>
@@ -64,12 +45,7 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <h3>Your Transactions</h3>
     <table border="1" cellpadding="8">
-        <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Date</th>
-        </tr>
+        <tr><th>ID</th><th>Type</th><th>Amount</th><th>Date</th></tr>
         <?php foreach($entries as $entry): ?>
         <tr>
             <td><?php echo $entry['id']; ?></td>
@@ -82,9 +58,6 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <?php
-if (isset($showModalAd) && $showModalAd) {
-    echo "<script>showAdModal();</script>";
-}
+include_once '../includes/footer.php';
+if (isset($showModalAd)) echo "<script>showAdModal();</script>";
 ?>
-</body>
-</html>
